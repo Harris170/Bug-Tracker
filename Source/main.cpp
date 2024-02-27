@@ -1,25 +1,48 @@
-#include <SFML/Graphics.hpp>
-#include "imgui.h"
-#include "imgui-SFML.h"
+#include "Globals.h"
+#include "BugManager.h"
 
-#include "BugModel.h"
+BugManager bug_manager;
 
-// TODO: TODO
-//! Important
-//? Bugs/Fix Me
-//x Not Working
+void MainDashboard() {
+	float buttonWidth = ImGui::GetContentRegionAvail().x;
+
+	if (ImGui::Button("Register New Bug"))
+	{
+		open_new_bug_modal = true;
+	}
+
+	if (open_new_bug_modal)
+	{
+		bug_manager.RegisterNewBug();
+	}
+
+	const char* remove_button_label = "Remove Resolved Bugs";
+	ImGui::SameLine(buttonWidth - ImGui::CalcTextSize(remove_button_label).x);
+	if (ImGui::Button(remove_button_label))
+	{
+		bug_manager.RemoveResolvedBugs();
+	}
+
+	bug_manager.DrawBugsList();
+}
 
 int main() {
 	// Create SFML window
-	sf::RenderWindow window(sf::VideoMode(800, 600), "Bug Tracker");
-	window.setFramerateLimit(60);
+	sf::RenderWindow window(sf::VideoMode(APP_WIDTH, APP_HEIGHT), APP_NAME, sf::Style::Titlebar | sf::Style::Close);
+	window.setFramerateLimit(FPS);
 
 	// Initialize ImGui
 	ImGui::SFML::Init(window);
 
 	// Set ImGui style to match the background color
 	ImGuiStyle& style = ImGui::GetStyle();
-	style.Colors[ImGuiCol_WindowBg] = ImVec4(15.0f / 255.0f, 15.0f / 255.0f, 15.0f / 255.0f, 1.0f);
+	style.Colors[ImGuiCol_WindowBg] = APP_BG_COLOR;
+
+	// Load a font and set font size
+	default_font = MakeNewFont(FONT_PATH "Default.ttf");
+	italic_font = MakeNewFont(FONT_PATH "Italic.ttf");
+	bold_font = MakeNewFont(FONT_PATH "Bold.ttf");
+	bold_italic_font = MakeNewFont(FONT_PATH "BoldItalic.ttf");
 
 	// Main loop
 	while (window.isOpen()) {
@@ -38,6 +61,7 @@ int main() {
 
 		// Set the ImGui window size to match the SFML window size
 		ImGui::SetNextWindowSize({ static_cast<float>(window.getSize().x), static_cast<float>(window.getSize().y) });
+
 		// Center the ImGui window by setting the position to (0, 0) and using ImGuiWindowFlags_AlwaysAutoResize
 		ImGui::SetNextWindowPos(ImVec2(0, 0));
 
@@ -48,8 +72,14 @@ int main() {
 			ImGuiWindowFlags_NoDecoration;
 
 		// Begin ImGui window
-		ImGui::Begin("ImGui Window", nullptr, windowFlags);
+		ImGui::Begin("Bug Tracker", nullptr, windowFlags);
+		ImGui::PushFont(default_font);
+		ImGui::Text(APP_VERSION);
+		// Show total bugs count in same line
+		ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::CalcTextSize("Bugs: 999").x);
+		ImGui::Text("Bugs: %d", bug_manager.GetTotalBugs());
 		MainDashboard();
+		ImGui::PopFont();
 		ImGui::End();
 
 		// Render ImGui

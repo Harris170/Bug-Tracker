@@ -3,17 +3,11 @@
 
 class BugModel
 {
-private:
-	std::string name;
-	std::string description;
-	bool completed;
-
 public:
-	BugModel(const std::string& name, const std::string& description, bool completed)
-		: name(name), description(description), completed(completed) {}
+	size_t uid;
+	std::string title;
+	bool status;
 
-	const std::string& GetName() const;
-	const std::string& GetDescription() const;
-	bool IsCompleted() const;
-	void SetCompleted(bool completed);
+	BugModel(size_t uid, const std::string& title, bool status)
+		: uid(uid), title(title), status(status) {}
 };
