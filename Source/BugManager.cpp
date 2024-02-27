@@ -17,7 +17,6 @@ void BugManager::DrawBugsList()
 
 	ImGui::Checkbox("##select_all", &select_all);
 	ImGui::NextColumn();
-	ImGui::Separator();
 	ImGui::PopFont();
 
 	ImGui::SetColumnWidth(0, ImGui::GetWindowWidth() * 0.10f); // 10% for UID
@@ -39,21 +38,24 @@ void BugManager::DrawBugsList()
 	std::sort(bugs.begin(), bugs.end(), checked_sort);
 
 	// Table content with checkbox that changes the status of the bug
-	for (auto& bug : bugs) {
-		// Center-align the ID column content
-		ImGui::Text("%d", bug.uid);
-		ImGui::NextColumn();
+	if (bugs.size() > 0) {
+		for (auto& bug : bugs) {
+			ImGui::Separator();
+			// Center-align the ID column content
+			ImGui::Text("%d", bug.uid);
+			ImGui::NextColumn();
 
-		// Center-align the Title column content
-		ImGui::TextWrapped("%s", bug.title.c_str());
-		ImGui::NextColumn();
+			// Center-align the Title column content
+			ImGui::TextWrapped("%s", bug.title.c_str());
+			ImGui::NextColumn();
 
-		// Center-align the Status column content
-		std::string checkboxId = "##checkbox" + std::to_string(bug.uid);
-		if (ImGui::Checkbox(checkboxId.c_str(), &bug.status) && bug.status) {
-			std::rotate(bugs.begin(), bugs.begin() + 1, bugs.end());
+			// Center-align the Status column content
+			std::string checkboxId = "##checkbox" + std::to_string(bug.uid);
+			if (ImGui::Checkbox(checkboxId.c_str(), &bug.status) && bug.status) {
+				std::rotate(bugs.begin(), bugs.begin() + 1, bugs.end());
+			}
+			ImGui::NextColumn();
 		}
-		ImGui::NextColumn();
 	}
 
 	if (select_all && not just_pressed_select_all) {
