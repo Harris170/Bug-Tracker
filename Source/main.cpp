@@ -26,7 +26,8 @@ void MainDashboard() {
 	bug_manager.DrawBugsList();
 }
 
-int main() {
+int WinMain()
+{
 	// Create SFML window
 	sf::RenderWindow window(sf::VideoMode(APP_WIDTH, APP_HEIGHT), APP_NAME, sf::Style::Titlebar | sf::Style::Close);
 	window.setFramerateLimit(FPS);
@@ -49,6 +50,7 @@ int main() {
 		sf::Event event;
 		while (window.pollEvent(event)) {
 			if (event.type == sf::Event::Closed) {
+				//TODO: SAVE FUNCTIONALITY
 				window.close();
 			}
 
@@ -78,6 +80,8 @@ int main() {
 		// Show total bugs count in same line
 		ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::CalcTextSize("Bugs: 999").x);
 		ImGui::Text("Bugs: %d", bug_manager.GetTotalBugs());
+
+		//TODO: CHECK IF SAVE FILE EXISTS THEN LOAD IT, ELSE CREATE NEW
 		MainDashboard();
 		ImGui::PopFont();
 		ImGui::End();
