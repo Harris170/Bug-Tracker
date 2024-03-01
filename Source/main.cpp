@@ -1,10 +1,84 @@
 #include "Globals.h"
 #include "BugManager.h"
+#include "save_load.h"
 
 BugManager bug_manager;
+SaveLoad save_load;
 
-void MainDashboard() {
-	float buttonWidth = ImGui::GetContentRegionAvail().x;
+bool settings_open = false;
+void SettingsModal()
+{
+	if (settings_open)
+	{
+		ImGui::OpenPopup("Settings");
+		if (ImGui::BeginPopupModal("Settings", &settings_open, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			char save_path[256] = "";
+			ImGui::SeparatorText("Save Path");
+			if (ImGui::InputTextWithHint("##save_path", save_load.GetSavePath().c_str(), save_path, 256))
+			{
+				save_load.SetSavePath(save_path);
+			}
+
+			ImGui::SeparatorText("Font Size");
+			float font_size = ImGui::GetFontSize();
+			if (ImGui::RadioButton("Small", font_size == 18.0f))
+			{
+				ImGui::GetIO().FontGlobalScale = 0.75f;
+			}
+			ImGui::SameLine();
+			if (ImGui::RadioButton("Large", font_size == 24.0f))
+			{
+				ImGui::GetIO().FontGlobalScale = 1.0f;
+			}
+
+			if (ImGui::Button("Close"))
+			{
+				settings_open = false;
+				ImGui::CloseCurrentPopup();
+			}
+		}
+
+		ImGui::EndPopup();
+	}
+}
+
+void MainDashboard()
+{
+	// Add Edit and Settings buttons in the menu bar of the main window
+	if (ImGui::BeginMenuBar())
+	{
+		ImGui::PushFont(default_small_font);
+		if (ImGui::BeginMenu("File"))
+		{
+			if (ImGui::MenuItem("Save") and bug_manager.GetTotalBugs() > 0)
+			{
+				save_load.Save(bug_manager.GetAllBugs(), "save.txt");
+			}
+			if (ImGui::MenuItem("Load"))
+			{
+				std::string load_file_path = save_load.GetSavePath() + "/" + "save.txt";
+				bool loaded = save_load.Load(load_file_path, &bug_manager);
+			}
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::BeginMenu("Settings"))
+		{
+			settings_open = true;
+			ImGui::EndMenu();
+		}
+
+		ImGui::EndMenuBar();
+		ImGui::PopFont();
+	}
+
+	SettingsModal();
+
+	ImGui::NewLine();
+	ImGui::Separator();
+
+	float available_space = ImGui::GetContentRegionAvail().x;
 
 	if (ImGui::Button("Register New Bug"))
 	{
@@ -17,7 +91,7 @@ void MainDashboard() {
 	}
 
 	const char* remove_button_label = "Remove Resolved Bugs";
-	ImGui::SameLine(buttonWidth - ImGui::CalcTextSize(remove_button_label).x);
+	ImGui::SameLine(available_space - ImGui::CalcTextSize(remove_button_label).x);
 	if (ImGui::Button(remove_button_label))
 	{
 		bug_manager.RemoveResolvedBugs();
@@ -41,16 +115,19 @@ int WinMain()
 
 	// Load a font and set font size
 	default_font = MakeNewFont(FONT_PATH "Default.ttf");
+	default_small_font = MakeNewFont(FONT_PATH "Default.ttf", 16.0f);
 	italic_font = MakeNewFont(FONT_PATH "Italic.ttf");
 	bold_font = MakeNewFont(FONT_PATH "Bold.ttf");
 	bold_italic_font = MakeNewFont(FONT_PATH "BoldItalic.ttf");
 
+	std::ifstream load_file("save.txt");
+	//save_load.Load(load_file, bug_manager.GetAllBugs());
+	load_file.close();
 	// Main loop
 	while (window.isOpen()) {
 		sf::Event event;
 		while (window.pollEvent(event)) {
 			if (event.type == sf::Event::Closed) {
-				//TODO: SAVE FUNCTIONALITY
 				window.close();
 			}
 
@@ -71,7 +148,7 @@ int WinMain()
 		ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
 			ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
 			ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoBringToFrontOnFocus |
-			ImGuiWindowFlags_NoDecoration;
+			ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_MenuBar;
 
 		// Begin ImGui window
 		ImGui::Begin("Bug Tracker", nullptr, windowFlags);
@@ -93,6 +170,11 @@ int WinMain()
 	}
 
 	// Shutdown ImGui
+	if (bug_manager.GetTotalBugs() > 0) {
+		// Check if file already exists, then ask if you want to overwrite the existing file or make new file.
+		// if new file then ask for file name, default can be save1.txt, save2.txt etc
+		save_load.Save(bug_manager.GetAllBugs(), "save.txt");
+	}
 	ImGui::SFML::Shutdown();
 
 	return 0;

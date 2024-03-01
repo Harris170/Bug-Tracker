@@ -5,6 +5,7 @@
 #include <imgui-SFML.h>
 
 extern ImFont* default_font;
+extern ImFont* default_small_font;
 extern ImFont* italic_font;
 extern ImFont* bold_font;
 extern ImFont* bold_italic_font;
@@ -20,6 +21,6 @@ extern bool open_new_bug_modal;
 #define APP_BG_COLOR ImVec4(0.45f, 0.55f, 0.60f, 1.00f)
 #define FPS 60
 
-extern ImFont* MakeNewFont(std::string path);
+extern ImFont* MakeNewFont(std::string path, float size = FONT_SIZE);
 extern void PushFontBold();
 #endif

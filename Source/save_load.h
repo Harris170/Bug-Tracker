@@ -1,0 +1,16 @@
+#pragma once
+#include "BugModel.h"
+#include "BugManager.h"
+#include <iostream>
+#include <fstream>
+#include <vector>
+
+class SaveLoad {
+private:
+	std::string save_path = "D:/Development/C++/BugTracker";
+public:
+	void SetSavePath(const char* path);
+	std::string GetSavePath();
+	bool Save(std::vector<BugModel> bugs, std::string file_name);
+	bool Load(std::string load_file_path, BugManager* bug_manager);
+};

@@ -93,7 +93,9 @@ void BugManager::RegisterNewBug()
 		{
 			if (strlen(title) != 0)
 			{
-				bugs.push_back(BugModel(bugs.size() + 1, title, false));
+				BugModel bug = CreateNewBug(GetTotalBugs() + 1, title, false);
+				bug.status = false;
+				PushBackBug(&bug);
 				std::memset(title, 0, sizeof(title));
 				open_new_bug_modal = false;
 				ImGui::CloseCurrentPopup();
@@ -107,6 +109,7 @@ void BugManager::RegisterNewBug()
 			open_new_bug_modal = false;
 			ImGui::CloseCurrentPopup();
 		}
+
 		ImGui::EndPopup();
 	}
 }
@@ -118,7 +121,23 @@ void BugManager::RemoveResolvedBugs()
 	just_pressed_select_all = false;
 }
 
+std::vector<BugModel> BugManager::GetAllBugs()
+{
+	return bugs;
+}
+
 size_t BugManager::GetTotalBugs()
 {
 	return bugs.size();
+}
+
+BugModel BugManager::CreateNewBug(size_t uid, std::string title, bool status)
+{
+	BugModel bug(uid, title, status);
+	return bug;
+}
+
+void BugManager::PushBackBug(BugModel* bug)
+{
+	this->bugs.push_back(*bug);
 }
