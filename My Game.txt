@@ -1,7 +1,0 @@
-UID:	2
-Title:	baller
-Status:	1
-
-UID:	3
-Title:	Duplicates are being created int the inventory, when picking up an item
-Status:	1
