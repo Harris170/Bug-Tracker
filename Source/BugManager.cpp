@@ -141,3 +141,16 @@ void BugManager::PushBackBug(BugModel* bug)
 {
 	this->bugs.push_back(*bug);
 }
+
+bool BugManager::BugAlreadyExists(BugModel* bug)
+{
+	for (auto b : GetAllBugs())
+	{
+		if (bug->title == b.title)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}

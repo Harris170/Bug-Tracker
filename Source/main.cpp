@@ -51,14 +51,17 @@ void MainDashboard()
 		ImGui::PushFont(default_small_font);
 		if (ImGui::BeginMenu("File"))
 		{
-			if (ImGui::MenuItem("Save") and bug_manager.GetTotalBugs() > 0)
+			if (ImGui::MenuItem("Save"))
 			{
-				save_load.Save(bug_manager.GetAllBugs(), "save.txt");
+				bool saved = save_load.Save(bug_manager.GetAllBugs(), "save.txt");
+				//TODO: NOTIFY THE USER WHETHER THE FILE HAS BEEN SAVED OR NOT , WITH THE FILE PATH.
 			}
 			if (ImGui::MenuItem("Load"))
 			{
 				std::string load_file_path = save_load.GetSavePath() + "/" + "save.txt";
 				bool loaded = save_load.Load(load_file_path, &bug_manager);
+
+				//TODO: IF FILE LOADED OR NOT, DISPLAY NOTIFICATION TO USER
 			}
 			ImGui::EndMenu();
 		}
@@ -95,6 +98,7 @@ void MainDashboard()
 	if (ImGui::Button(remove_button_label))
 	{
 		bug_manager.RemoveResolvedBugs();
+		//TODO: NOTIFY THAT THE BUGS HAVE BEEN REMOVED
 	}
 
 	bug_manager.DrawBugsList();
@@ -120,10 +124,10 @@ int WinMain()
 	bold_font = MakeNewFont(FONT_PATH "Bold.ttf");
 	bold_italic_font = MakeNewFont(FONT_PATH "BoldItalic.ttf");
 
-	std::ifstream load_file("save.txt");
-	//save_load.Load(load_file, bug_manager.GetAllBugs());
-	load_file.close();
-	// Main loop
+	// Preloads the bugs if the file exits.
+	std::string load_file = save_load.GetSavePath() + "/" + "save.txt";
+	save_load.Load(load_file, &bug_manager);
+
 	while (window.isOpen()) {
 		sf::Event event;
 		while (window.pollEvent(event)) {
@@ -131,7 +135,6 @@ int WinMain()
 				window.close();
 			}
 
-			// Pass SFML events to ImGui
 			ImGui::SFML::ProcessEvent(event);
 		}
 
@@ -154,11 +157,11 @@ int WinMain()
 		ImGui::Begin("Bug Tracker", nullptr, windowFlags);
 		ImGui::PushFont(default_font);
 		ImGui::Text(APP_VERSION);
+
 		// Show total bugs count in same line
 		ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::CalcTextSize("Bugs: 999").x);
 		ImGui::Text("Bugs: %d", bug_manager.GetTotalBugs());
 
-		//TODO: CHECK IF SAVE FILE EXISTS THEN LOAD IT, ELSE CREATE NEW
 		MainDashboard();
 		ImGui::PopFont();
 		ImGui::End();
@@ -169,12 +172,11 @@ int WinMain()
 		window.display();
 	}
 
+	// Check if file already exists, then ask if you want to overwrite the existing file or make new file.
+	// if new file then ask for file name, default can be save1.txt, save2.txt etc
+	save_load.Save(bug_manager.GetAllBugs(), "save.txt");
+
 	// Shutdown ImGui
-	if (bug_manager.GetTotalBugs() > 0) {
-		// Check if file already exists, then ask if you want to overwrite the existing file or make new file.
-		// if new file then ask for file name, default can be save1.txt, save2.txt etc
-		save_load.Save(bug_manager.GetAllBugs(), "save.txt");
-	}
 	ImGui::SFML::Shutdown();
 
 	return 0;

@@ -12,12 +12,10 @@ std::string SaveLoad::GetSavePath()
 
 bool SaveLoad::Save(std::vector<BugModel> bugs, std::string file_name = "save.txt")
 {
-	// Create a text file in given path
 	std::ofstream save_file(GetSavePath() + (std::string)"/" + file_name);
 
 	if (save_file.is_open())
 	{
-		// Store the info from bugs to text file
 		int index = 0;
 		for (auto bug : bugs)
 		{
@@ -26,12 +24,11 @@ bool SaveLoad::Save(std::vector<BugModel> bugs, std::string file_name = "save.tx
 			save_file << "Title:\t" << bug.title << std::endl;
 			save_file << "Status:\t" << bug.status << std::endl;
 
-			if (index < bugs.size())	// Only add a new line if current bug is not the last bug
+			if (index < bugs.size())
 			{
 				save_file << std::endl;
 			}
 		}
-		// Close text file
 		save_file.close();
 		return true;
 	}
@@ -43,7 +40,9 @@ bool SaveLoad::Load(std::string load_file_path, BugManager* bug_manager)
 	std::ifstream load_file;
 	load_file.open(load_file_path);
 
-	if (load_file.is_open())
+	bool is_empty = load_file.peek() == std::ifstream::traits_type::eof();
+
+	if (load_file.is_open() and not is_empty)
 	{
 		std::string line;
 
@@ -60,7 +59,11 @@ bool SaveLoad::Load(std::string load_file_path, BugManager* bug_manager)
 			std::string status_str = line.substr(8);
 			bool status = status_str == "1" ? true : false;
 			BugModel bug = bug_manager->CreateNewBug(uid, title, status);
-			bug_manager->PushBackBug(&bug);
+
+			if (not bug_manager->BugAlreadyExists(&bug))
+			{
+				bug_manager->PushBackBug(&bug);
+			}
 
 			std::getline(load_file, line);	// Skip one line between each bug
 		}

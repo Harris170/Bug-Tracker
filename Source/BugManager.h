@@ -19,4 +19,5 @@ public:
 	size_t GetTotalBugs();
 	BugModel CreateNewBug(size_t uid, std::string title, bool status);
 	void PushBackBug(BugModel* bug);
+	bool BugAlreadyExists(BugModel* bug);
 };
