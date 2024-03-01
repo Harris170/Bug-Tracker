@@ -1,6 +1,7 @@
 #pragma once
 #include "BugModel.h"
 #include "BugManager.h"
+
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -10,7 +11,6 @@ private:
 	std::string save_path = "D:/Development/C++/BugTracker";
 	std::string current_file = "Untitled";
 public:
-	bool has_saved_file = false;
 
 	void SetSavePath(const char* path);
 	std::string GetSavePath();

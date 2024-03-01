@@ -88,7 +88,7 @@ void SaveAsModal()
 				if (save_load.Save(bug_manager.GetAllBugs(), save_file_name))
 				{
 					save_load.SetCurrentFile(save_file_without_extension);
-					save_load.has_saved_file = true;
+					saved_current_file = true;
 					first_time_saving = false;
 				}
 				save_as_open = false;
@@ -134,7 +134,7 @@ void OpenFileModal()
 				if (save_load.Load(save_load.GetSavePath() + "/" + load_file_name, &bug_manager))
 				{
 					save_load.SetCurrentFile(load_file_without_extension);
-					save_load.has_saved_file = true;
+					saved_current_file = true;
 				}
 
 				open_file_open = false;
@@ -175,7 +175,19 @@ void ConfirmQuitModal()
 			float button_width = ImGui::GetContentRegionAvail().x / 3;
 			if (ImGui::Button("Save", ImVec2(button_width, 0)))
 			{
-				save_as_open = true;
+				if (first_time_saving)
+				{
+					save_as_open = true;
+				}
+				else
+				{
+					bool saved = save_load.Save(bug_manager.GetAllBugs(), save_load.GetCurrentFile() + ".txt");
+					if (saved)
+					{
+						saved_current_file = true;
+						force_quit = true;
+					}
+				}
 				confirm_quit_open = false;
 			}
 			ImGui::SameLine();
@@ -218,7 +230,7 @@ void MainDashboard()
 					bool saved = save_load.Save(bug_manager.GetAllBugs(), save_load.GetCurrentFile() + ".txt");
 					if (saved)
 					{
-						save_load.has_saved_file = true;
+						saved_current_file = true;
 					}
 				}
 				//TODO: NOTIFY THE USER WHETHER THE FILE HAS BEEN SAVED OR NOT , WITH THE FILE PATH.
@@ -266,7 +278,7 @@ void MainDashboard()
 	if (open_new_bug_modal)
 	{
 		bug_manager.RegisterNewBug();
-		save_load.has_saved_file = false;
+		saved_current_file = false;
 	}
 
 	const char* remove_button_label = "Remove Resolved Bugs";
@@ -274,7 +286,7 @@ void MainDashboard()
 	if (ImGui::Button(remove_button_label))
 	{
 		bug_manager.RemoveResolvedBugs();
-		save_load.has_saved_file = false;
+		saved_current_file = false;
 		//TODO: NOTIFY THAT THE BUGS HAVE BEEN REMOVED
 	}
 
@@ -362,7 +374,7 @@ int WinMain()
 		ImGui::PushStyleColor(ImGuiCol_Text, default_color);
 		if (force_quit) window.close();
 
-		if (save_load.has_saved_file)
+		if (saved_current_file)
 		{
 			window.setTitle(APP_NAME + (std::string)" - " + save_load.GetCurrentFile());
 		}
@@ -373,7 +385,7 @@ int WinMain()
 		sf::Event event;
 		while (window.pollEvent(event)) {
 			if (event.type == sf::Event::Closed) {
-				if (not save_load.has_saved_file and bug_manager.GetTotalBugs() > 0)
+				if (not saved_current_file and bug_manager.GetTotalBugs() > 0)
 				{
 					confirm_quit_open = true;
 				}

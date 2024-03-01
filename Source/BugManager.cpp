@@ -1,4 +1,5 @@
 #include "BugManager.h"
+
 bool select_all = false;
 bool just_pressed_select_all = false;
 
@@ -63,6 +64,7 @@ void BugManager::DrawBugsList()
 			std::string checkboxId = "##checkbox" + std::to_string(bug.uid);
 			if (ImGui::Checkbox(checkboxId.c_str(), &bug.status) && bug.status) {
 				std::rotate(bugs.begin(), bugs.begin() + 1, bugs.end());
+				saved_current_file = false;
 			}
 
 			ImGui::NextColumn();
@@ -74,6 +76,7 @@ void BugManager::DrawBugsList()
 		for (auto& bug : bugs) {
 			bug.status = true;
 			just_pressed_select_all = true;
+			saved_current_file = false;
 		}
 	}
 
@@ -82,6 +85,7 @@ void BugManager::DrawBugsList()
 			bug.status = false;
 		}
 		just_pressed_select_all = false;
+		saved_current_file = false;
 	}
 
 	ImGui::Separator();

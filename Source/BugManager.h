@@ -1,9 +1,7 @@
 #pragma once
-#include "BugModel.h"
 #include "Globals.h"
+#include "BugModel.h"
 
-#include <imgui.h>
-#include <imgui-SFML.h>
 #include <vector>
 #include <algorithm>
 

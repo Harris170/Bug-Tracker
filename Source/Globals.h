@@ -14,6 +14,7 @@ extern ImVec4 default_color;
 extern ImVec4 dimmed_color;
 
 extern bool open_new_bug_modal;
+extern bool saved_current_file;
 
 #define FONT_LARGE 24.0f
 #define FONT_SMALL 18.0f
