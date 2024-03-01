@@ -40,6 +40,16 @@ void BugManager::DrawBugsList()
 	// Table content with checkbox that changes the status of the bug
 	if (bugs.size() > 0) {
 		for (auto& bug : bugs) {
+			// If bug is checked, it becomes dark gray
+			if (bug.status)
+			{
+				ImGui::PushStyleColor(ImGuiCol_Text, dimmed_color);
+			}
+			else
+			{
+				ImGui::PushStyleColor(ImGuiCol_Text, default_color);
+			}
+
 			ImGui::Separator();
 			// Center-align the ID column content
 			ImGui::Text("%d", bug.uid);
@@ -54,7 +64,9 @@ void BugManager::DrawBugsList()
 			if (ImGui::Checkbox(checkboxId.c_str(), &bug.status) && bug.status) {
 				std::rotate(bugs.begin(), bugs.begin() + 1, bugs.end());
 			}
+
 			ImGui::NextColumn();
+			ImGui::PopStyleColor();
 		}
 	}
 

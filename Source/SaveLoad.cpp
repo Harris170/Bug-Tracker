@@ -1,4 +1,4 @@
-#include "save_load.h"
+#include "SaveLoad.h"
 
 void SaveLoad::SetSavePath(const char* path)
 {
@@ -10,8 +10,23 @@ std::string SaveLoad::GetSavePath()
 	return save_path;
 }
 
-bool SaveLoad::Save(std::vector<BugModel> bugs, std::string file_name = "save.txt")
+void SaveLoad::SetCurrentFile(std::string file_name)
 {
+	current_file = file_name;
+}
+
+std::string SaveLoad::GetCurrentFile()
+{
+	return current_file;
+}
+
+bool SaveLoad::Save(std::vector<BugModel> bugs, std::string file_name)
+{
+	if (file_name == ".txt")
+	{
+		return false;
+	}
+
 	std::ofstream save_file(GetSavePath() + (std::string)"/" + file_name);
 
 	if (save_file.is_open())
@@ -37,12 +52,11 @@ bool SaveLoad::Save(std::vector<BugModel> bugs, std::string file_name = "save.tx
 
 bool SaveLoad::Load(std::string load_file_path, BugManager* bug_manager)
 {
-	std::ifstream load_file;
-	load_file.open(load_file_path);
+	std::ifstream load_file(load_file_path);
 
 	bool is_empty = load_file.peek() == std::ifstream::traits_type::eof();
 
-	if (load_file.is_open() and not is_empty)
+	if (load_file.good() and not is_empty)
 	{
 		std::string line;
 
