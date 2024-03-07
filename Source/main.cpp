@@ -1,6 +1,9 @@
 #include "Globals.h"
 #include "BugManager.h"
 #include "SaveLoad.h"
+#include "ImWidgets.h"
+
+//TODO: Add a config file that stores user data like settings, theme, save directory, last file that was worked on for reopening it.
 
 BugManager bug_manager;
 SaveLoad save_load;
@@ -18,6 +21,69 @@ int rounding = 2;
 ImVec2 align = ImVec2(0.5f, 0.5f);
 ImVec2 spacing = ImVec2(10, 4);
 
+void SetCustomStyle()
+{
+	// Set ImGui style to match the background color
+	ImGuiStyle& style = ImGui::GetStyle();
+	style.Colors[ImGuiCol_WindowBg] = background_color;
+
+	// Set colors of buttons, checkboxes, etc.
+	ImVec4 normal_color = ImVec4(0.15f, 0.15f, 0.15f, 0.8f);
+	ImVec4 hover_color = ImVec4(0.2f, 0.2f, 0.2f, 0.95f);
+
+	default_color = config.active_color;
+	dimmed_color = config.inactive_color;
+
+	style.Colors[ImGuiCol_Button] = normal_color;
+	style.Colors[ImGuiCol_ButtonHovered] = hover_color;
+	style.Colors[ImGuiCol_ButtonActive] = hover_color;
+
+	style.Colors[ImGuiCol_CheckMark] = dimmed_color;
+
+	style.Colors[ImGuiCol_FrameBg] = normal_color;
+	style.Colors[ImGuiCol_FrameBgHovered] = hover_color;
+	style.Colors[ImGuiCol_FrameBgActive] = hover_color;
+
+	style.Colors[ImGuiCol_SliderGrab] = default_color;
+	style.Colors[ImGuiCol_SliderGrabActive] = default_color;
+
+	style.Colors[ImGuiCol_ScrollbarBg] = normal_color;
+	style.Colors[ImGuiCol_ScrollbarGrab] = default_color;
+	style.Colors[ImGuiCol_ScrollbarGrabHovered] = hover_color;
+	style.Colors[ImGuiCol_ScrollbarGrabActive] = hover_color;
+
+	style.Colors[ImGuiCol_TitleBg] = background_color;
+	style.Colors[ImGuiCol_TitleBgActive] = background_color;
+	style.Colors[ImGuiCol_TitleBgCollapsed] = background_color;
+
+	style.Colors[ImGuiCol_Header] = normal_color;
+	style.Colors[ImGuiCol_HeaderHovered] = hover_color;
+	style.Colors[ImGuiCol_HeaderActive] = hover_color;
+
+	style.SeparatorTextBorderSize = 2;
+
+	style.FramePadding = size;
+	style.ScrollbarSize = size.x;
+	style.GrabMinSize = size.x;
+
+	style.FramePadding = size;
+	style.WindowPadding = size;
+
+	style.SeparatorTextAlign = align;
+	style.WindowTitleAlign = align;
+	style.ButtonTextAlign = align;
+	style.SelectableTextAlign = align;
+
+	style.ItemInnerSpacing = size;
+
+	style.WindowRounding = rounding;
+	style.ScrollbarRounding = rounding;
+	style.GrabRounding = rounding;
+	style.FrameRounding = rounding;
+	style.ChildRounding = rounding;
+	style.PopupRounding = rounding;
+}
+
 void SettingsModal()
 {
 	if (settings_open)
@@ -31,6 +97,7 @@ void SettingsModal()
 			if (ImGui::InputTextWithHint("##save_path", save_load.GetSavePath().c_str(), save_path, sizeof(save_path)))
 			{
 				save_load.SetSavePath(save_path);
+				save_load.SaveConfig();
 			}
 			ImGui::NewLine();
 
@@ -39,11 +106,15 @@ void SettingsModal()
 			if (ImGui::RadioButton("Small", font_size == FONT_SMALL))
 			{
 				ImGui::GetIO().FontGlobalScale = 0.75f;
+				font_size = FONT_SMALL;
+				save_load.SaveConfig();
 			}
 			ImGui::SameLine();
 			if (ImGui::RadioButton("Large", font_size == FONT_LARGE))
 			{
 				ImGui::GetIO().FontGlobalScale = 1.0f;
+				font_size = FONT_LARGE;
+				save_load.SaveConfig();
 			}
 			ImGui::NewLine();
 
@@ -65,6 +136,7 @@ void SettingsModal()
 				default_color = ImVec4(1.0f, 1.0f, 1.0f, 1.00f);
 				dimmed_color = ImVec4(0.3f, 0.3f, 0.3f, 1.00f);
 				background_color = ImVec4(0.15f, 0.15f, 0.15f, 1.00f);
+				ImWidgets::CreateNotification("Settings have been reset to default.", &notifications, 3, ImNotificationFlags_BottomRight);
 			}
 			ImGui::EndPopup();
 		}
@@ -164,50 +236,26 @@ void OpenFileModal()
 
 void ConfirmQuitModal()
 {
-	if (confirm_quit_open)
+	ImMessageBoxResult result = ImWidgets::MessageBox("You have unsaved changes. Save before quitting?", "Confirm Quit", &confirm_quit_open, ImMessageBoxFlags_YesNoCancelButton);
+	if (result == ImMessageBoxResult_Yes)
 	{
-		ImGui::OpenPopup("Confirm Quit", ImGuiWindowFlags_AlwaysAutoResize);
-		if (ImGui::BeginPopupModal("Confirm Quit", &confirm_quit_open, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse))
+		if (first_time_saving)
 		{
-			ImGui::Text("You have unsaved changes. Save before quitting?");
-			ImGui::NewLine();
-
-			float button_width = ImGui::GetContentRegionAvail().x / 3;
-			if (ImGui::Button("Save", ImVec2(button_width, 0)))
-			{
-				if (first_time_saving)
-				{
-					save_as_open = true;
-				}
-				else
-				{
-					bool saved = save_load.Save(bug_manager.GetAllBugs(), save_load.GetCurrentFile() + ".txt");
-					if (saved)
-					{
-						saved_current_file = true;
-						force_quit = true;
-					}
-				}
-				confirm_quit_open = false;
-			}
-			ImGui::SameLine();
-
-			if (ImGui::Button("Quit", ImVec2(button_width, 0)))
-			{
-				confirm_quit_open = false;
-				force_quit = true;
-				ImGui::CloseCurrentPopup();
-			}
-			ImGui::SameLine();
-
-			if (ImGui::Button("Cancel", ImVec2(button_width, 0)))
-			{
-				confirm_quit_open = false;
-				ImGui::CloseCurrentPopup();
-			}
-
-			ImGui::EndPopup();
+			save_as_open = true;
 		}
+		else
+		{
+			bool saved = save_load.Save(bug_manager.GetAllBugs(), save_load.GetCurrentFile() + ".txt");
+			if (saved)
+			{
+				saved_current_file = true;
+				force_quit = true;
+			}
+		}
+	}
+	else if (result == ImMessageBoxResult_No)
+	{
+		force_quit = true;
 	}
 }
 
@@ -233,7 +281,6 @@ void MainDashboard()
 						saved_current_file = true;
 					}
 				}
-				//TODO: NOTIFY THE USER WHETHER THE FILE HAS BEEN SAVED OR NOT , WITH THE FILE PATH.
 			}
 
 			if (ImGui::MenuItem("Save As"))
@@ -245,7 +292,6 @@ void MainDashboard()
 			{
 				open_file_open = true;
 				first_time_saving = false;
-				//TODO: IF FILE LOADED OR NOT, DISPLAY NOTIFICATION TO USER
 			}
 			ImGui::EndMenu();
 		}
@@ -287,7 +333,6 @@ void MainDashboard()
 	{
 		bug_manager.RemoveResolvedBugs();
 		saved_current_file = false;
-		//TODO: NOTIFY THAT THE BUGS HAVE BEEN REMOVED
 	}
 
 	bug_manager.DrawBugsList();
@@ -302,62 +347,10 @@ int WinMain()
 	// Initialize ImGui
 	ImGui::SFML::Init(window);
 
-	// Set ImGui style to match the background color
-	ImGuiStyle& style = ImGui::GetStyle();
-	style.Colors[ImGuiCol_WindowBg] = background_color;
+	// Load config file
+	save_load.LoadConfig();
 
-	// Set colors of buttons, checkboxes, etc.
-	ImVec4 normal_color = ImVec4(0.15f, 0.15f, 0.15f, 0.8f);
-	ImVec4 hover_color = ImVec4(0.2f, 0.2f, 0.2f, 0.95f);
-
-	style.Colors[ImGuiCol_Button] = normal_color;
-	style.Colors[ImGuiCol_ButtonHovered] = hover_color;
-	style.Colors[ImGuiCol_ButtonActive] = hover_color;
-
-	style.Colors[ImGuiCol_CheckMark] = dimmed_color;
-
-	style.Colors[ImGuiCol_FrameBg] = normal_color;
-	style.Colors[ImGuiCol_FrameBgHovered] = hover_color;
-	style.Colors[ImGuiCol_FrameBgActive] = hover_color;
-
-	style.Colors[ImGuiCol_SliderGrab] = default_color;
-	style.Colors[ImGuiCol_SliderGrabActive] = default_color;
-
-	style.Colors[ImGuiCol_ScrollbarBg] = normal_color;
-	style.Colors[ImGuiCol_ScrollbarGrab] = default_color;
-	style.Colors[ImGuiCol_ScrollbarGrabHovered] = hover_color;
-	style.Colors[ImGuiCol_ScrollbarGrabActive] = hover_color;
-
-	style.Colors[ImGuiCol_TitleBg] = background_color;
-	style.Colors[ImGuiCol_TitleBgActive] = background_color;
-	style.Colors[ImGuiCol_TitleBgCollapsed] = background_color;
-
-	style.Colors[ImGuiCol_Header] = normal_color;
-	style.Colors[ImGuiCol_HeaderHovered] = hover_color;
-	style.Colors[ImGuiCol_HeaderActive] = hover_color;
-
-	style.SeparatorTextBorderSize = 2;
-
-	style.FramePadding = size;
-	style.ScrollbarSize = size.x;
-	style.GrabMinSize = size.x;
-
-	style.FramePadding = size;
-	style.WindowPadding = size;
-
-	style.SeparatorTextAlign = align;
-	style.WindowTitleAlign = align;
-	style.ButtonTextAlign = align;
-	style.SelectableTextAlign = align;
-
-	style.ItemInnerSpacing = size;
-
-	style.WindowRounding = rounding;
-	style.ScrollbarRounding = rounding;
-	style.GrabRounding = rounding;
-	style.FrameRounding = rounding;
-	style.ChildRounding = rounding;
-	style.PopupRounding = rounding;
+	SetCustomStyle();
 
 	// Load a font and set font size
 	default_font = MakeNewFont(FONT_PATH "Default.ttf");
@@ -366,7 +359,7 @@ int WinMain()
 	bold_font = MakeNewFont(FONT_PATH "Bold.ttf");
 	bold_italic_font = MakeNewFont(FONT_PATH "BoldItalic.ttf");
 
-	// Preloads the bugs if the file exits.
+	// Preloads the bugs if the last file that was worked on, exits.
 	std::string load_file = save_load.GetSavePath() + "/" + save_load.GetCurrentFile();
 	save_load.Load(load_file, &bug_manager);
 
@@ -391,6 +384,7 @@ int WinMain()
 				}
 				else
 				{
+					save_load.SaveConfig();
 					window.close();
 				}
 			}
@@ -423,6 +417,8 @@ int WinMain()
 		ImGui::Text("Bugs: %d", bug_manager.GetTotalBugs());
 
 		MainDashboard();
+		ImWidgets::RenderNotifications(&notifications);
+
 		ImGui::PopFont();
 		ImGui::End();
 
@@ -438,6 +434,7 @@ int WinMain()
 
 	ImGui::PopStyleColor();
 	// Shutdown ImGui
+	save_load.SaveConfig();
 	ImGui::SFML::Shutdown();
 
 	return 0;

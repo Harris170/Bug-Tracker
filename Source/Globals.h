@@ -1,8 +1,9 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
-#include "imgui.h"
+#include <imgui.h>
 #include <SFML/Graphics.hpp>
 #include <imgui-SFML.h>
+#include "ImWidgets.h"
 
 extern ImFont* default_font;
 extern ImFont* default_small_font;
@@ -15,6 +16,15 @@ extern ImVec4 dimmed_color;
 
 extern bool open_new_bug_modal;
 extern bool saved_current_file;
+extern std::vector<ImWidgets::Notification> notifications;
+extern struct Config
+{
+	std::string save_path;
+	std::string current_file;
+	float font_size;
+	ImVec4 active_color;
+	ImVec4 inactive_color;
+} config;
 
 #define FONT_LARGE 24.0f
 #define FONT_SMALL 18.0f

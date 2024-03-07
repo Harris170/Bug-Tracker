@@ -1,4 +1,5 @@
 #include "BugManager.h"
+#include "Globals.h"
 
 bool select_all = false;
 bool just_pressed_select_all = false;
@@ -132,9 +133,18 @@ void BugManager::RegisterNewBug()
 
 void BugManager::RemoveResolvedBugs()
 {
+	if (bugs.empty())
+	{
+		select_all = false;
+		just_pressed_select_all = false;
+		ImWidgets::CreateNotification("No bugs exist.", &notifications, 3.0f, ImNotificationFlags_BottomRight);
+		return;
+	}
+
 	bugs.erase(std::remove_if(bugs.begin(), bugs.end(), [](const BugModel& bug) { return bug.status; }), bugs.end());
 	select_all = false;
 	just_pressed_select_all = false;
+	ImWidgets::CreateNotification("Resolved bugs have been removed.", &notifications, 3.0f, ImNotificationFlags_BottomRight);
 }
 
 std::vector<BugModel> BugManager::GetAllBugs()

@@ -163,6 +163,7 @@
     <ClInclude Include="Source\BugManager.h" />
     <ClInclude Include="Source\BugModel.h" />
     <ClInclude Include="Source\Globals.h" />
+    <ClInclude Include="Source\ImWidgets.h" />
     <ClInclude Include="Source\SaveLoad.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
